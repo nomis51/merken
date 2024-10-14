@@ -53,7 +53,8 @@ public static class Program
         Log.Logger = new LoggerConfiguration()
             .WriteTo.File(
                 Path.Join(
-                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    $".{nameof(Merken).ToLower()}",
                     "logs",
                     ".txt"
                 ),
