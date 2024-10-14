@@ -27,13 +27,15 @@ public class BrowseCardsView : IView
         "Answer"
     ];
 
-    private int _selectedCardIndex;
+    private const int PageSize = 10;
 
     #endregion
 
     #region Members
 
     private readonly IStorageService<Deck> _deckStorageService;
+    private int _selectedCardIndex;
+    private int _pageIndex;
 
     #endregion
 
@@ -65,12 +67,16 @@ public class BrowseCardsView : IView
                 return new ViewResult(typeof(DeckView), deckId);
             }
 
+            deck.Cards = deck.Cards.OrderBy(e => e.Question).ToList();
+
             while (true)
             {
                 Console.SetCursorPosition(0, 0);
 
                 var cardTable = new Table()
                     .Centered()
+                    .NoBorder()
+                    .HorizontalBorder()
                     .AddColumns(
                         _headers.Select(
                                 e => new TableColumn(e)
@@ -78,7 +84,7 @@ public class BrowseCardsView : IView
                             )
                             .ToArray()
                     );
-                for (var i = 0; i < deck.Cards.Count; ++i)
+                for (var i = _pageIndex; i < _pageIndex + PageSize; ++i)
                 {
                     if (_selectedCardIndex == i)
                     {
@@ -97,7 +103,7 @@ public class BrowseCardsView : IView
                 }
 
                 new Layout()
-                    .Render(cardTable, _keybinds, deck.Cards.Count + 4);
+                    .Render(cardTable, _keybinds, PageSize + 4);
 
                 var choice = Console.ReadKey(true);
 
@@ -127,16 +133,26 @@ public class BrowseCardsView : IView
 
                     case ConsoleKey.J:
                     case ConsoleKey.DownArrow:
-                        if (_selectedCardIndex > deck.Cards.Count - 1) break;
+                        if (_selectedCardIndex + 1 > deck.Cards.Count - 1) break;
 
-                        _selectedCardIndex = (_selectedCardIndex + 1) % deck.Cards.Count;
+                        ++_selectedCardIndex;
+                        if (_selectedCardIndex >= _pageIndex + PageSize)
+                        {
+                            ++_pageIndex;
+                        }
+
                         break;
 
                     case ConsoleKey.K:
                     case ConsoleKey.UpArrow:
-                        if (_selectedCardIndex > deck.Cards.Count - 1) break;
+                        if (_selectedCardIndex - 1 < 0) break;
 
-                        _selectedCardIndex = (_selectedCardIndex - 1 + deck.Cards.Count) % deck.Cards.Count;
+                        --_selectedCardIndex;
+                        if (_selectedCardIndex < _pageIndex)
+                        {
+                            --_pageIndex;
+                        }
+
                         break;
 
                     case ConsoleKey.Q:
